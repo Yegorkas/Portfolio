@@ -1,0 +1,14 @@
+{
+  "name": "Qwen UI Composer",
+  "id": "1572422299551010879",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "devAllowedDomains": ["http://localhost:8000"],
+    "reasoning": "Plugin needs to call local backend at http://localhost:8000 for layout generation using Qwen3-14B."
+  }
+}

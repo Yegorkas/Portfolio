@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Qwen UI Composer — ULTRA JSON</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    }
+
+    body {
+      background: #05060a;
+      color: #f5f7ff;
+      font-size: 12px;
+    }
+
+    .app {
+      width: 100%;
+      height: 100%;
+      padding: 14px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .header-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #f5f7ff;
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      line-height: 1.4;
+      color: #a7b0d9;
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #14192a;
+      color: #c5d0ff;
+      border: 1px solid #2b3560;
+    }
+
+    .badge-soft {
+      background: #11172a;
+      color: #94a0d8;
+      border-color: #20284a;
+    }
+
+    .section {
+      border-radius: 12px;
+      background: #090b12;
+      border: 1px solid #191f39;
+      padding: 10px 10px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #a3b3ff;
+    }
+
+    .section-description {
+      font-size: 11px;
+      color: #818bb3;
+      line-height: 1.5;
+    }
+
+    .field-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-row {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+    }
+
+    .field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: #b7c2f0;
+    }
+
+    textarea {
+      resize: none;
+      min-height: 96px;
+      max-height: 150px;
+      font-size: 11px;
+      line-height: 1.5;
+      padding: 8px 9px;
+      border-radius: 8px;
+      border: 1px solid #252c4c;
+      background: radial-gradient(circle at top left, #141933, #070913);
+      color: #f5f7ff;
+      outline: none;
+    }
+
+    textarea::placeholder {
+      color: #6f789f;
+    }
+
+    textarea:focus {
+      border-color: #4169ff;
+      box-shadow: 0 0 0 1px #4169ff55;
+    }
+
+    select {
+      appearance: none;
+      font-size: 11px;
+      padding: 6px 24px 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #252c4c;
+      background-color: #050712;
+      color: #e9edff;
+      background-image: linear-gradient(45deg, transparent 50%, #a3b3ff 50%),
+        linear-gradient(135deg, #a3b3ff 50%, transparent 50%);
+      background-position:
+        calc(100% - 12px) calc(50% - 2px),
+        calc(100% - 8px) calc(50% - 2px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: #4169ff;
+      box-shadow: 0 0 0 1px #4169ff55;
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: #050711;
+      border: 1px solid #252c4c;
+      gap: 2px;
+    }
+
+    .theme-pill {
+      flex: 1;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      text-align: center;
+      cursor: pointer;
+      color: #a6afd7;
+    }
+
+    .theme-pill.active {
+      background: linear-gradient(135deg, #4169ff, #6b8bff);
+      color: #ffffff;
+      box-shadow: 0 0 0 1px #2a3fa8, 0 6px 12px rgba(65, 105, 255, 0.28);
+    }
+
+    .footer {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+    }
+
+    button {
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 7px 10px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.1s ease, transform 0.06s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+      white-space: nowrap;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      flex: 1.2;
+      background: linear-gradient(135deg, #4169ff, #6b8bff);
+      color: #ffffff;
+      box-shadow: 0 0 0 1px #2a3fa8, 0 9px 16px rgba(65, 105, 255, 0.28);
+    }
+
+    .btn-primary:hover:enabled {
+      background: linear-gradient(135deg, #5777ff, #8fa3ff);
+      transform: translateY(-0.5px);
+      box-shadow: 0 10px 18px rgba(65, 105, 255, 0.32);
+    }
+
+    .btn-secondary {
+      flex: 1;
+      background: #090c18;
+      color: #d4ddff;
+      box-shadow: 0 0 0 1px #252c4c;
+    }
+
+    .btn-secondary:hover:enabled {
+      background: #0d1120;
+      transform: translateY(-0.5px);
+      box-shadow: 0 8px 14px rgba(12, 17, 35, 0.8);
+    }
+
+    .btn-ghost {
+      width: 28px;
+      padding-inline: 0;
+      background: transparent;
+      color: #727aa5;
+      box-shadow: none;
+    }
+
+    .btn-ghost:hover:enabled {
+      background: #0d1120;
+      transform: translateY(-0.5px);
+    }
+
+    .btn-icon {
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .status-bar {
+      font-size: 10px;
+      color: #818bb3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #394161;
+    }
+
+    .status-dot.pending {
+      background: #f2b94c;
+    }
+
+    .status-dot.ok {
+      background: #3dd681;
+    }
+
+    .status-dot.error {
+      background: #ff5b7f;
+    }
+
+    .status-text-strong {
+      color: #c0c9ff;
+    }
+
+    .status-right {
+      text-align: right;
+      color: #6f789f;
+    }
+
+    .status-right span {
+      color: #c0c9ff;
+    }
+
+    .hint {
+      font-size: 10px;
+      color: #626b96;
+      line-height: 1.4;
+    }
+
+    .hint strong {
+      color: #c0c9ff;
+      font-weight: 500;
+    }
+
+    .hint kbd {
+      font-family: inherit;
+      font-size: 10px;
+      padding: 1px 4px;
+      border-radius: 4px;
+      border: 1px solid #252c4c;
+      background: #050712;
+      color: #d4ddff;
+    }
+
+    .pill-small {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: #0c101f;
+      border: 1px solid #252c4c;
+      color: #9ba5d3;
+    }
+
+    .pill-small span {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div class="header-title">Qwen UI Composer — ULTRA JSON</div>
+      <div class="header-subtitle">
+        ШІ поводиться як сеньйор-дизайнер: ти пишеш промпт, а плагін будує реальний dashboard у Figma.
+      </div>
+      <div class="badge-row">
+        <div class="badge">AI layout engine</div>
+        <div class="badge badge-soft">Backend-aware</div>
+        <div class="badge badge-soft">JSON schema v1</div>
+      </div>
+    </div>
+
+    <!-- PROMPT -->
+    <div class="section">
+      <div class="section-label">Запит до ШІ-дизайнера</div>
+      <div class="section-description">
+        Опиши, який інтерфейс тобі потрібен: маркетинговий dashboard, аналітика, e-commerce, продуктова аналітика і т.д.
+      </div>
+      <div class="field-column">
+        <div class="field">
+          <label class="field-label" for="prompt">Промпт</label>
+          <textarea id="prompt" placeholder="Наприклад: Створи сучасний маркетинговий dashboard для SaaS-продукту з навбаром, 4 метриками (Revenue, ROAS, CAC, Active campaigns), графіком Revenue by day, таблицею активних кампаній та блоком Insights з рекомендаціями."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="section">
+      <div class="section-label">Налаштування</div>
+      <div class="field-column">
+        <div class="field-row">
+          <div class="field">
+            <label class="field-label" for="device">Девайс</label>
+            <select id="device">
+              <option value="desktop" selected>Desktop (1440px width)</option>
+              <option value="mobile">Mobile (390px width)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Тема</label>
+            <div class="theme-toggle" id="themeToggle">
+              <div class="theme-pill active" data-theme="dark">Dark</div>
+              <div class="theme-pill" data-theme="light">Light</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint">
+          <strong>Порада:</strong> спочатку сконцентруйся на змісті промпту, а не на колонках та відступах — це вирішить ШІ.
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="btn-row">
+        <button class="btn-primary" id="btnGenerate">
+          <span id="btnGenerateLabel">Згенерувати layout</span>
+        </button>
+        <button class="btn-secondary" id="btnApplyTheme">
+          Apply theme to selection
+        </button>
+        <button class="btn-ghost" id="btnClose" title="Закрити">
+          <span class="btn-icon">✕</span>
+        </button>
+      </div>
+      <div class="status-bar">
+        <div class="status-label">
+          <div class="status-dot" id="backendStatusDot"></div>
+          <span id="backendStatusText">Backend: idle</span>
+        </div>
+        <div class="status-right">
+          <span id="layoutStatusText">Готовий до генерації</span>
+        </div>
+      </div>
+      <div class="hint">
+        <span class="pill-small">
+          <span>Tip:</span> <span>Затисни <kbd>⌘/Ctrl</kbd> + <kbd>Z</kbd>, щоб відмінити останній layout.</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const promptInput = document.getElementById("prompt");
+    const deviceSelect = document.getElementById("device");
+    const themeToggle = document.getElementById("themeToggle");
+    const btnGenerate = document.getElementById("btnGenerate");
+    const btnGenerateLabel = document.getElementById("btnGenerateLabel");
+    const btnApplyTheme = document.getElementById("btnApplyTheme");
+    const btnClose = document.getElementById("btnClose");
+    const backendStatusDot = document.getElementById("backendStatusDot");
+    const backendStatusText = document.getElementById("backendStatusText");
+    const layoutStatusText = document.getElementById("layoutStatusText");
+
+    let currentThemeId = "dark";
+    let isGenerating = false;
+
+    function setBackendStatus(status, message) {
+      backendStatusDot.className = "status-dot";
+      if (status === "pending") backendStatusDot.classList.add("pending");
+      if (status === "ok") backendStatusDot.classList.add("ok");
+      if (status === "error") backendStatusDot.classList.add("error");
+
+      if (!message) {
+        if (status === "pending") message = "Backend: waiting…";
+        if (status === "ok") message = "Backend: ok";
+        if (status === "error") message = "Backend: error";
+        if (status === "idle") message = "Backend: idle";
+      }
+
+      backendStatusText.textContent = message;
+    }
+
+    function setLayoutStatus(text) {
+      layoutStatusText.innerHTML = text;
+    }
+
+    function setGeneratingState(active) {
+      isGenerating = active;
+      if (active) {
+        btnGenerate.disabled = true;
+        btnApplyTheme.disabled = true;
+        btnGenerateLabel.textContent = "Генерація…";
+        setLayoutStatus("Генеруємо layout…");
+      } else {
+        btnGenerate.disabled = false;
+        btnApplyTheme.disabled = false;
+        btnGenerateLabel.textContent = "Згенерувати layout";
+      }
+    }
+
+    // Theme toggle
+    themeToggle.addEventListener("click", (event) => {
+      const pill = event.target.closest(".theme-pill");
+      if (!pill) return;
+
+      const theme = pill.getAttribute("data-theme");
+      if (!theme || theme === currentThemeId) return;
+
+      currentThemeId = theme;
+      const pills = themeToggle.querySelectorAll(".theme-pill");
+      pills.forEach((p) => p.classList.remove("active"));
+      pill.classList.add("active");
+    });
+
+    // Generate layout
+    btnGenerate.addEventListener("click", () => {
+      if (isGenerating) return;
+
+      const prompt = (promptInput.value || "").trim();
+      const device = deviceSelect.value || "desktop";
+
+      if (!prompt) {
+        setLayoutStatus("Додай хоча б короткий опис того, що потрібно згенерувати.");
+        promptInput.focus();
+        return;
+      }
+
+      setGeneratingState(true);
+      setBackendStatus("pending", "Backend: waiting…");
+
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: "generate-layout",
+            payload: {
+              device: device,
+              themeId: currentThemeId,
+              prompt: prompt
+            }
+          }
+        },
+        "*"
+      );
+    });
+
+    // Apply theme to selection
+    btnApplyTheme.addEventListener("click", () => {
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: "apply-theme",
+            payload: {
+              themeId: currentThemeId
+            }
+          }
+        },
+        "*"
+      );
+    });
+
+    // Close plugin
+    btnClose.addEventListener("click", () => {
+      parent.postMessage(
+        {
+          pluginMessage: {
+            type: "close-plugin"
+          }
+        },
+        "*"
+      );
+    });
+
+    // Messages from code.js
+    window.onmessage = (event) => {
+      const msg = event.data && event.data.pluginMessage;
+      if (!msg || typeof msg !== "object") return;
+
+      if (msg.type === "backend-status") {
+        const status = msg.payload && msg.payload.status ? msg.payload.status : "idle";
+        const url = msg.payload && msg.payload.url ? msg.payload.url : "";
+        let text = "Backend: " + status;
+        if (url && status === "error") {
+          text = "Backend: error (" + url + ")";
+        }
+        setBackendStatus(status, text);
+        return;
+      }
+
+      if (msg.type === "layout-generated") {
+        setGeneratingState(false);
+        const backendStatus = msg.payload && msg.payload.backendStatus ? msg.payload.backendStatus : "ok";
+        setBackendStatus(backendStatus);
+        setLayoutStatus("Layout готовий. Перейдіть до згенерованого фрейму у документі.");
+        return;
+      }
+
+      if (msg.type === "layout-error") {
+        setGeneratingState(false);
+        const err = msg.payload && msg.payload.message ? msg.payload.message : "Unknown error";
+        setBackendStatus("error", "Backend: error");
+        setLayoutStatus("Помилка при генерації: " + err);
+        return;
+      }
+
+      if (msg.type === "layout-busy") {
+        setLayoutStatus("Генерація вже виконується. Дочекайся завершення.");
+        return;
+      }
+
+      if (msg.type === "theme-applied") {
+        setLayoutStatus("Тема застосована до вибраного фрейму.");
+        return;
+      }
+
+      if (msg.type === "pong") {
+        // debug ping
+        return;
+      }
+    };
+
+    // Початковий стан
+    setBackendStatus("idle", "Backend: idle");
+    setLayoutStatus("Готовий до генерації. Опиши, що саме потрібно збудувати.");
+  </script>
+</body>
+</html>

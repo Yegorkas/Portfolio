@@ -151,6 +151,54 @@ function safeNotify(message, options) {
   } catch (e) {}
 }
 
+function applyPadding(frame, padding, theme) {
+  if (!frame) return;
+  var resolvedTheme = theme || getTheme(DEFAULT_THEME_ID);
+  var fallback = resolvedTheme.paddingMd;
+
+  if (typeof padding === "number") {
+    frame.paddingTop = frame.paddingRight = frame.paddingBottom = frame.paddingLeft = padding;
+    return;
+  }
+
+  if (padding && typeof padding === "object") {
+    frame.paddingTop = padding.top != null ? padding.top : fallback;
+    frame.paddingRight = padding.right != null ? padding.right : fallback;
+    frame.paddingBottom = padding.bottom != null ? padding.bottom : fallback;
+    frame.paddingLeft = padding.left != null ? padding.left : fallback;
+    return;
+  }
+
+  frame.paddingTop = frame.paddingRight = frame.paddingBottom = frame.paddingLeft = fallback;
+}
+
+function createAutoLayoutFrame(opts) {
+  var theme = opts && opts.theme ? opts.theme : getTheme(DEFAULT_THEME_ID);
+  var frame = figma.createFrame();
+  frame.name = (opts && opts.name) || "Frame";
+  frame.layoutMode = (opts && opts.direction) || "VERTICAL";
+  frame.primaryAxisSizingMode = "AUTO";
+  frame.counterAxisSizingMode = "AUTO";
+  frame.primaryAxisAlignItems = (opts && opts.primaryAlign) || "MIN";
+  frame.counterAxisAlignItems = (opts && opts.crossAlign) || "MIN";
+  frame.itemSpacing = (opts && typeof opts.gap === "number") ? opts.gap : theme.gapSm;
+
+  applyPadding(frame, opts && opts.padding, theme);
+
+  if (opts && Object.prototype.hasOwnProperty.call(opts, "fills")) {
+    safeSetFills(frame, opts.fills || []);
+  }
+  if (opts && Object.prototype.hasOwnProperty.call(opts, "strokes")) {
+    safeSetStrokes(frame, opts.strokes || []);
+  }
+
+  if (opts && typeof opts.cornerRadius === "number") {
+    frame.cornerRadius = opts.cornerRadius;
+  }
+
+  return frame;
+}
+
 function getTheme(themeId) {
   if (!themeId || !THEME_TOKENS[themeId]) return THEME_TOKENS[DEFAULT_THEME_ID];
   return THEME_TOKENS[themeId];
@@ -397,37 +445,31 @@ function createKpiRow(theme, items) {
 
 // Filter row
 function createFilterRow(theme, filters) {
-  var row = figma.createFrame();
-  row.name = "Filters";
-  row.layoutMode = "HORIZONTAL";
-  row.primaryAxisSizingMode = "AUTO";
-  row.counterAxisSizingMode = "AUTO";
-  row.primaryAxisAlignItems = "MIN";
-  row.counterAxisAlignItems = "CENTER";
-  row.itemSpacing = theme.gapSm;
-  row.paddingTop = 0;
-  row.paddingRight = 0;
-  row.paddingBottom = 0;
-  row.paddingLeft = 0;
-  safeSetFills(row, []);
-  safeSetStrokes(row, []);
+  var row = createAutoLayoutFrame({
+    name: "Filters",
+    direction: "HORIZONTAL",
+    primaryAlign: "MIN",
+    crossAlign: "CENTER",
+    gap: theme.gapSm,
+    padding: 0,
+    fills: [],
+    strokes: [],
+    theme: theme
+  });
 
   for (var i = 0; i < filters.length; i++) {
-    var pill = figma.createFrame();
-    pill.name = "Filter / " + filters[i];
-    pill.layoutMode = "HORIZONTAL";
-    pill.primaryAxisSizingMode = "AUTO";
-    pill.counterAxisSizingMode = "AUTO";
-    pill.primaryAxisAlignItems = "MIN";
-    pill.counterAxisAlignItems = "CENTER";
-    pill.itemSpacing = 6;
-    pill.paddingTop = 4;
-    pill.paddingRight = 10;
-    pill.paddingBottom = 4;
-    pill.paddingLeft = 10;
-    pill.cornerRadius = theme.radiusPill;
-    safeSetFills(pill, [solidPaintFromColor(theme.surfaceAlt)]);
-    safeSetStrokes(pill, []);
+    var pill = createAutoLayoutFrame({
+      name: "Filter / " + filters[i],
+      direction: "HORIZONTAL",
+      primaryAlign: "MIN",
+      crossAlign: "CENTER",
+      gap: 6,
+      padding: { top: 4, right: 10, bottom: 4, left: 10 },
+      cornerRadius: theme.radiusPill,
+      fills: [solidPaintFromColor(theme.surfaceAlt)],
+      strokes: [],
+      theme: theme
+    });
 
     var label = createTextNode(filters[i], theme, "caption", "medium", "secondary");
     pill.appendChild(label);
@@ -1165,7 +1207,7 @@ function applyThemeToSelection(payload) {
   for (var i = 0; i < selection.length; i++) {
     var node = selection[i];
     if (node.type === "FRAME" || node.type === "COMPONENT" || node.type === "INSTANCE") {
-      recolorFrame(node, theme);
+      recolorFrame(node, theme, 0);
     }
   }
 
@@ -1173,8 +1215,12 @@ function applyThemeToSelection(payload) {
   sendToUI({ type: "theme-applied" });
 }
 
-function recolorFrame(node, theme) {
+function recolorFrame(node, theme, depth) {
   if (!node || !("children" in node)) return;
+
+  var currentDepth = typeof depth === "number" ? depth : 0;
+  if (currentDepth > 6) return;
+
   if (node.name && node.name.toLowerCase().indexOf("background") !== -1) {
     safeSetFills(node, [solidPaintFromColor(theme.background)]);
   } else {
@@ -1184,8 +1230,10 @@ function recolorFrame(node, theme) {
   var children = node.children;
   for (var i = 0; i < children.length; i++) {
     var child = children[i];
+    if (child.type === "VECTOR" || child.type === "EMBED") continue;
+
     if ("children" in child) {
-      recolorFrame(child, theme);
+      recolorFrame(child, theme, currentDepth + 1);
     } else if (child.type === "TEXT") {
       safeSetFills(child, [solidPaintFromColor(theme.textPrimary)]);
     } else if (child.type === "RECTANGLE" || child.type === "ELLIPSE") {
